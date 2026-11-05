@@ -56,3 +56,9 @@ See [ADR 001](docs/adr/001-financial-consistency.md). Integer cents avoid floati
 See [NACHA assumptions](docs/nacha.md). **Not certified for live ACH processing. Bank-specific validation, compliance, security review, authorization and operational controls are required before any real use.** No live banking integration exists. All accounts/names are fictional. Do not submit generated files to a bank.
 
 This is a loopback-only development demo with no authentication. Never expose it publicly. PostgreSQL credentials are local configuration, not production secrets. `EnsureCreated` bootstraps new databases; versioned migrations, authentication/RBAC, tamper-evident audit storage, encrypted banking data, holiday calendars, payment authorization, retries of returned payments, multi-currency and bank transport are future work. Audit rows are append-only through this application, not protected against database administrators. A returned invoice is terminal in this slice; retries require a future explicit attempt model. Docker tags track supported releases rather than immutable digests.
+
+[Portfolio overview and suggested resume/profile wording](https://github.com/ericwright85/dotnet-cloud-architecture/blob/main/docs/PORTFOLIO.md).
+
+### Managed cloud build note
+
+For a session HTTPS proxy, pass a combined CA bundle as a build secret: `docker build --secret id=build_ca,src=/path/to/combined-ca.pem -t billing-demo .`. Verification stays enabled; the secret is not copied into the image. Current environment policy blocks the Microsoft registry redirect at `centralus.data.mcr.microsoft.com`, so the .NET container build is pending that domain's approval. Native API, database, UI build and HTTP checks passed.
