@@ -1,0 +1,11 @@
+import React from 'react';
+import {createRoot} from 'react-dom/client';
+import './style.css';
+type Payment={id:string,cents:number};
+type Batch={id:string,payments:Payment[]};
+async function api(path:string,body?:unknown){const r=await fetch('/api/'+path,{method:body===undefined?'GET':'POST',headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});if(!r.ok)throw Error(await r.text());const text=await r.text();return text?JSON.parse(text):null;}
+function App(){
+ const [batch,setBatch]=React.useState<Batch|null>(null),[report,setReport]=React.useState<Record<string,number>>({}),[message,setMessage]=React.useState('Ready'),[busy,setBusy]=React.useState(false);
+ async function run(action:()=>Promise<void>){setBusy(true);try{await action();setReport(await api('reports'));setMessage('Operation completed')}catch(e){setMessage(String(e))}finally{setBusy(false)}}
+ return <main><small>ERIC WRIGHT / REFERENCE IMPLEMENTATION</small><h1>Billing operations</h1><p>Synthetic recurring billing → ACH export → reconciliation.</p><aside>Fictional data only. Not certified for live ACH processing.</aside><section><h2>November 2026 demo</h2><button disabled={busy} onClick={()=>run(async()=>{await api('demo/seed',{});await api('invoices/2026-11',{});setBatch(await api('batches',{period:'2026-11',effectiveDate:'2026-11-06'}))})}>1. Generate payment batch</button><button disabled={busy||!batch} onClick={()=>run(async()=>{if(batch)await api(`batches/${batch.id}/reconcile`,batch.payments.map((p,i)=>({paymentId:p.id,outcome:i===0?'Settled':'Returned',returnCode:i===0?null:'R01'})))})}>2. Reconcile synthetic results</button>{batch&&<p><a href={`/api/batches/${batch.id}/ach`} download="fictional-demo.ach">Download fictional ACH file</a> · Batch {batch.id}</p>}</section><section><h2>Financial summary</h2><div className="metrics">{Object.entries(report).map(([key,value])=><article key={key}><label>{key.replace('Cents','')}</label><strong>{new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(value/100)}</strong></article>)}</div></section><p role="status">{message}</p><footer>Original educational example. No employer or customer systems represented.</footer></main>
+}createRoot(document.getElementById('root')!).render(<App/>);

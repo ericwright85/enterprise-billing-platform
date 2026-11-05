@@ -1,0 +1,8 @@
+**/bin/
+**/obj/
+**/node_modules/
+web/dist/
+.env
+artifacts/
+TestResults/
+src/Billing.Api/wwwroot/

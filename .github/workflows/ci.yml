@@ -1,0 +1,29 @@
+name: billing-ci
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: ci-only
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 2s --health-retries 20
+    env:
+      BILLING_TEST_DB: Host=localhost;Database=billing_test;Username=postgres;Password=ci-only
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: dotnet test tests/Billing.Tests -c Release
+      - run: npm ci && npm run build
+        working-directory: web

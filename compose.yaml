@@ -1,0 +1,24 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: billing
+      POSTGRES_USER: billing
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    ports: ["127.0.0.1:5432:5432"]
+    volumes: ["billing-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U billing -d billing"]
+      interval: 2s
+      retries: 20
+  api:
+    build: .
+    environment:
+      ConnectionStrings__Billing: Host=db;Database=billing;Username=billing;Password=${POSTGRES_PASSWORD}
+      Billing__RecurringEnabled: "true"
+      ASPNETCORE_URLS: http://+:8080
+    ports: ["127.0.0.1:5080:8080"]
+    depends_on:
+      db: {condition: service_healthy}
+volumes:
+  billing-data:
